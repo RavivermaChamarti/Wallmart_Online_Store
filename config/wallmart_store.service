@@ -1,0 +1,14 @@
+[Unit]
+Description=Gunicorn instance to serve Wallmart Online Store
+After=network.target
+
+[Service]
+User=ravi
+Group=www-data
+WorkingDirectory=/home/ravi/Wallmart_Online_Store
+Environment="PATH=/home/ravi/Wallmart_Online_Store/venv/bin"
+ExecStart=/home/ravi/Wallmart_Online_Store/venv/bin/gunicorn --workers 3 --bind unix:wallmart_store.sock -m 007 wsgi:app
+
+[Install]
+WantedBy=multi-user.target
+/home/ravi/Wallmart_Online_Store
