@@ -22,16 +22,15 @@ cur.execute('DROP TABLE IF EXISTS categories;')
 
 # Create the categories table
 cur.execute('''CREATE TABLE categories (
-                categoryId      INTEGER,
+                categoryId      SERIAL PRIMARY KEY,
                 primaryCategory VARCHAR(50),
-                subCategory1 VARCHAR(50),
-                subCategory2 VARCHAR(50),
-                PRIMARY KEY (categoryID)
+                subCategory1    VARCHAR(50),
+                subCategory2    VARCHAR(50)
             );''')
 
 # Create the products table
 cur.execute('''CREATE TABLE products (
-                SKU             VARCHAR(12),
+                SKU             VARCHAR(12) PRIMARY KEY,
                 categoryId      INTEGER,
                 title           VARCHAR(250),
                 description     VARCHAR,
@@ -40,27 +39,24 @@ cur.execute('''CREATE TABLE products (
                 brand           VARCHAR(30),
                 available_stock INTEGER,
                 url             VARCHAR,
-                PRIMARY KEY (SKU),
                 FOREIGN KEY (categoryId) REFERENCES categories
             );''')
 
 # Create the persons table
 cur.execute('''CREATE TABLE persons (
-                personId    INTEGER,
+                personId    SERIAL PRIMARY KEY,
                 first_name  VARCHAR,
                 last_name   VARCHAR,
-                email_id    VARCHAR(320) UNIQUE,
-                PRIMARY KEY (personId)
+                email_id    VARCHAR(320) UNIQUE
             );''')
 
 # Create the boughtBy table
 cur.execute('''CREATE TABLE boughtBy (
-                transactionId  INTEGER,
+                transactionId   SERIAL PRIMARY KEY,
                 SKU             VARCHAR(12),
                 personId        INTEGER,
                 boughtOn        TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 quantity        INTEGER,
-                PRIMARY KEY (transactionId),
                 FOREIGN KEY (SKU) REFERENCES products,
                 FOREIGN KEY (personId) REFERENCES persons
             );''')
