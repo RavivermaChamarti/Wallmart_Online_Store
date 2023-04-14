@@ -11,4 +11,3 @@ ExecStart=/home/ravi/Wallmart_Online_Store/venv/bin/gunicorn --workers 3 --bind 
 
 [Install]
 WantedBy=multi-user.target
-/home/ravi/Wallmart_Online_Store
