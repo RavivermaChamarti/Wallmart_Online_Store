@@ -35,6 +35,7 @@ with open(categories_list_data, "r", encoding="utf-8") as f:
             row
             )
 
+# Create a temporary staging table for the products
 cur.execute("DROP TABLE IF EXISTS products_stage;")
 cur.execute(
     """CREATE TABLE products_stage(
@@ -51,11 +52,12 @@ cur.execute(
             );"""
 )
 
+# Populate the products_stage table with data
 products_list_data = Path("./data/ProductsList.csv")
 with open(products_list_data) as csv_file:
     cur.copy_expert("copy products_stage from stdin with csv header", csv_file)
 
-
+# Populate the products table with data
 cur.execute(""" INSERT INTO products(SKU, category_id, title, description, currency, price, brand, available_stock, url)
                 SELECT SKU, categories.category_id, title, description, currency, price, brand, floor(random() * (500+1))::int, url
                 FROM products_stage, categories
