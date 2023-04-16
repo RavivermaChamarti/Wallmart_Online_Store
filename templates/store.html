@@ -1,4 +1,11 @@
 {% extends "layout.html" %}
 {% block content %}
-        <h1>Hello! Welcome to the online Wallmart store</h1>
+    <h1>Hello! Welcome to the online Wallmart store</h1>
+    {% for product in products %}
+        {% if product.url is defined %}
+            <div>
+                <a href={{ product.url }}>{{ product.title }}</a>
+            </div>
+        {% endif %}
+    {% endfor %}
 {% endblock content%}
