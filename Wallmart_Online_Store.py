@@ -51,7 +51,9 @@ def logout():
 @app.route("/store")
 def store():
     with open_db() as cur:
-        cur.execute("SELECT SKU, category_id, title, url, brand, currency, price, description FROM products")
+        cur.execute("""SELECT SKU, title, url, brand, currency, price, description, primary_category, sub_category_1, sub_category_2
+                    FROM products, categories
+                    WHERE products.category_id = categories.category_id""")
         products = cur.fetchall()
     products_list = []
     for row in products:
@@ -72,5 +74,7 @@ def profile():
     return render_template("profile.html", title="profile")
 
 
+if __name__ == "__main__":
+    app.run(host='0.0.0.0')
 if __name__ == "__main__":
     app.run(host='0.0.0.0')
