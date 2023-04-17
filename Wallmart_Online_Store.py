@@ -51,7 +51,7 @@ def logout():
 @app.route("/store")
 def store():
     with open_db() as cur:
-        cur.execute("SELECT SKU, category_id, title, url FROM products")
+        cur.execute("SELECT SKU, category_id, title, url, brand, currency, price, description FROM products")
         products = cur.fetchall()
     products_list = []
     for row in products:
