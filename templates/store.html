@@ -1,0 +1,25 @@
+{% extends "layout.html" %}
+{% block content %}
+    <h1>Hello! Welcome to the online Wallmart store</h1>
+    <div class="card-deck">
+        {% for product in products %}
+            {% if product.url is defined %}
+                <div class="card bg-light mb-3">
+                    <div class="card-body">
+                        <details>
+                        <summary>
+                            <a href="{{ product.url }}" class="card-link"><h5 class="card-title">{{ product.title }}</h5></a>
+                            <p class="card-text"><small class="text-muted">{{ product.brand }}</small></p>
+                            <h6><p class="card-text"> {{ product.price }} {{ product.currency }} </p> </h6>
+                        </summary>
+                        <p class="card-text"><strong>Description: </strong>{{ product.description }}</p>
+                        <p class="card-text"><strong>Primary Category: </strong>{{ product.primary_category }}</p>
+                        <p class="card-text"><strong>Sub Category 1: </strong>{{ product.sub_category_1 }}</p>
+                        <p class="card-text"><strong>Sub Category 2: </strong>{{ product.sub_category_2 }}</p>
+                        </details>
+                    </div>
+                </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+{% endblock content%}
