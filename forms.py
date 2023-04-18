@@ -1,7 +1,9 @@
 import os
 
 import psycopg2
+from flask_bcrypt import Bcrypt
 from flask_wtf import FlaskForm
+from psycopg2.extras import RealDictCursor
 from wtforms import PasswordField, StringField, SubmitField
 from wtforms.validators import DataRequired, Email, EqualTo, Length, ValidationError
 
@@ -23,7 +25,7 @@ class RegistrationForms(FlaskForm):
         password=os.environ["DB_PASSWORD"]
         )
         # Open a cursor to perform database operations
-        cur = conn.cursor()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
         # Check if username exists in database
         cur.execute(f"""SELECT username
                         FROM credentials
@@ -43,7 +45,7 @@ class RegistrationForms(FlaskForm):
         password=os.environ["DB_PASSWORD"]
         )
         # Open a cursor to perform database operations
-        cur = conn.cursor()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
         # Check if email id exists in database
         cur.execute(f"""SELECT email_id
                         FROM persons
@@ -54,9 +56,6 @@ class RegistrationForms(FlaskForm):
         conn.close()
         if duplicate_email_id:
             raise ValidationError(f"There is an accounted linked to {email_id.data}! Please Log in if you already have an account")
-
-
-
 
 class LoginForms(FlaskForm):
     username = StringField('Username', validators=[DataRequired(), Length(min=4, max=10)])

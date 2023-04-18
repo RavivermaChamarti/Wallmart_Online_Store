@@ -40,9 +40,17 @@ def home():
 def login():
     form = LoginForms()
     if form.validate_on_submit():
-        if(form.username.data == "Ravi" and form.password.data =="abcdefgh"):
-            flash(f"Succesfully Logged Ravi!", "success")
-            return redirect(url_for('store'))
+        with open_db() as cur:
+            cur.execute(f"""SELECT first_name, last_name, salt, password_hash
+                            FROM persons, credentials
+                            WHERE username='{form.username.data}'
+                                    AND credentials.person_id=persons.person_id""")
+            user = cur.fetchone()
+            if user and bcrypt.check_password_hash(user['password_hash'], user['salt'] + form.password.data):
+                flash(f"Welcome Back {user['first_name']} {user['last_name']}!", "success")
+                return redirect(url_for('store'))
+            else:
+                flash(f"Login Unsuccessful! Use a valid Username and Password", "danger")
     return render_template("login.html", title="Login", form=form)
 
 
@@ -94,4 +102,4 @@ def profile():
 
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port='2020')
+    app.run(host='0.0.0.0', port='2000')
