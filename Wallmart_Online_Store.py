@@ -3,7 +3,7 @@ import os
 from secrets import token_hex
 
 import psycopg2
-from flask import Flask, flash, redirect, render_template, url_for
+from flask import Flask, flash, redirect, render_template, session, url_for
 from flask_bcrypt import Bcrypt
 from psycopg2.extras import RealDictCursor
 
@@ -12,7 +12,6 @@ from forms import LoginForms, RegistrationForms
 app = Flask(__name__)
 
 app.config['SECRET_KEY'] = os.environ["WALLMART_SECRET_KEY"]
-
 bcrypt = Bcrypt()
 
 @contextlib.contextmanager
@@ -41,12 +40,13 @@ def login():
     form = LoginForms()
     if form.validate_on_submit():
         with open_db() as cur:
-            cur.execute(f"""SELECT first_name, last_name, salt, password_hash
+            cur.execute(f"""SELECT first_name, last_name, salt, password_hash, username
                             FROM persons, credentials
                             WHERE username='{form.username.data}'
                                     AND credentials.person_id=persons.person_id""")
             user = cur.fetchone()
             if user and bcrypt.check_password_hash(user['password_hash'], user['salt'] + form.password.data):
+                session["user"] = user['username']
                 flash(f"Welcome Back {user['first_name']} {user['last_name']}!", "success")
                 return redirect(url_for('store'))
             else:
@@ -79,17 +79,21 @@ def register():
 
 @app.route("/logout")
 def logout():
-    return render_template("invalidUser.html", title="Logout")
+    session.clear()
+    return redirect(url_for("login"))
 
 
 @app.route("/store")
 def store():
-    with open_db() as cur:
-        cur.execute("""SELECT SKU, title, url, brand, currency, price, description, primary_category, sub_category_1, sub_category_2
-                    FROM products, categories
-                    WHERE products.category_id = categories.category_id""")
-        products = cur.fetchall()
-    return render_template("store.html", title="Store", products=products)
+    if "user" in session:
+        user = session["user"]
+        with open_db() as cur:
+            cur.execute("""SELECT SKU, title, url, brand, currency, price, description, primary_category, sub_category_1, sub_category_2
+                        FROM products, categories
+                        WHERE products.category_id = categories.category_id""")
+            products = cur.fetchall()
+        return render_template("store.html", title="Store", products=products, user=user)
+    return render_template("invalidUser.html", title="Invalid User")
 
 @app.route("/admin")
 def admin():
