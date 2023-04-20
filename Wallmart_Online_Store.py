@@ -35,6 +35,28 @@ def open_db():
 def home():
     return render_template("home.html", title="Home")
 
+@app.route("/store")
+def store():
+    if "username" in session:
+        user = session["username"]
+        with open_db() as cur:
+            cur.execute("""SELECT SKU, title, url, brand, currency, price, description, primary_category, sub_category_1, sub_category_2
+                        FROM products, categories
+                        WHERE products.category_id = categories.category_id""")
+            products = cur.fetchall()
+        return render_template("store.html", title="Store", products=products)
+    return render_template("invalidUser.html", title="Invalid User")
+
+@app.route("/admin")
+def admin():
+    return render_template("admin.html", title="Admin")
+
+
+@app.route("/profile")
+def profile():
+    return render_template("profile.html", title="Profile")
+
+
 @app.route("/login", methods=['GET', 'POST'])
 def login():
     form = LoginForms()
@@ -46,7 +68,7 @@ def login():
                                     AND credentials.person_id=persons.person_id""")
             user = cur.fetchone()
             if user and bcrypt.check_password_hash(user['password_hash'], user['salt'] + form.password.data):
-                session["user"] = user['username']
+                session["username"] = user['username']
                 flash(f"Welcome Back {user['first_name']} {user['last_name']}!", "success")
                 return redirect(url_for('store'))
             else:
@@ -80,30 +102,8 @@ def register():
 @app.route("/logout")
 def logout():
     session.clear()
-    return redirect(url_for("login"))
-
-
-@app.route("/store")
-def store():
-    if "user" in session:
-        user = session["user"]
-        with open_db() as cur:
-            cur.execute("""SELECT SKU, title, url, brand, currency, price, description, primary_category, sub_category_1, sub_category_2
-                        FROM products, categories
-                        WHERE products.category_id = categories.category_id""")
-            products = cur.fetchall()
-        return render_template("store.html", title="Store", products=products, user=user)
-    return render_template("invalidUser.html", title="Invalid User")
-
-@app.route("/admin")
-def admin():
-    return render_template("admin.html", title="Admin")
-
-
-@app.route("/profile")
-def profile():
-    return render_template("profile.html", title="Profile")
+    return render_template("home.html", title="Home")
 
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port='2000')
+    app.run(host='0.0.0.0', port='2010')
