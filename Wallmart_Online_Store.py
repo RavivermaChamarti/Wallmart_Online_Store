@@ -174,6 +174,14 @@ def logout():
 def buy():
     if request.method == "POST":
         print(request.form["sku"])
+        print(request.form["quantity"])
+        with open_db() as cur:
+            cur.execute(f"""SELECT *
+                            FROM credentials
+                            WHERE username='{session["username"]}'""")
+            user = cur.fetchone()
+            cur.execute(f"""INSERT INTO boughtBy(sku, person_id, quantity)
+                            VALUES ('{request.form["sku"]}', '{user["person_id"]}','{request.form["quantity"]}' )""")
     return redirect(request.referrer)
 
 
@@ -196,7 +204,6 @@ def notify_availability():
         elif request.form["notify_availability"] == "false":
             print("unnotify availability of this")
     return redirect(request.referrer)
-
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port="2010")
