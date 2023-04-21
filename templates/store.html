@@ -4,23 +4,49 @@
         <h1>Hello! {{ session['username'] }} Welcome to the online Wallmart store</h1>
         <div class="card-deck">
             {% for product in products %}
-                {% if product.url is defined %}
-                    <div class="card bg-light mb-3">
-                        <div class="card-body">
-                            <details>
-                            <summary>
-                                <a href="{{ product.url }}" class="card-link"><h5 class="card-title">{{ product.title }}</h5></a>
-                                <p class="card-text"><small class="text-muted">{{ product.brand }}</small></p>
-                                <h6><p class="card-text"> {{ product.price }} {{ product.currency }} </p> </h6>
-                            </summary>
-                            <p class="card-text"><strong>Description: </strong>{{ product.description }}</p>
-                            <p class="card-text"><strong>Primary Category: </strong>{{ product.primary_category }}</p>
-                            <p class="card-text"><strong>Sub Category 1: </strong>{{ product.sub_category_1 }}</p>
-                            <p class="card-text"><strong>Sub Category 2: </strong>{{ product.sub_category_2 }}</p>
-                            </details>
-                        </div>
-                    </div>
-                {% endif %}
+            {% if product.url is defined %}
+            <div class="card bg-light mb-3">
+            <div class="card-body">
+                <details>
+                <summary>
+                    <a href="{{ product.url }}" class="card-link"><h5 class="card-title">{{ product.title }}</h5></a>
+                    <p class="card-text"><small class="text-muted">{{ product.brand }}</small></p>
+                    <h6><p class="card-text"> {{ product.price }} {{ product.currency }} </p> </h6>
+                    <form action="{{url_for('buy')}}" method = "post">
+                        <button class="btn btn-warning btn-md rounded-pill"
+                            type="submit" name="sku" value="{{ product.sku }}"> Buy </button>
+                    </form>
+                    {% if product.sku in bookmarked_products %}
+                        <form action="{{url_for('bookmark')}}" method = "post">
+                            <button class="btn btn-outline-success rounded-pill active" aria-pressed="true"
+                            type="submit" name="bookmark_product" value="false">Bookmark This</button>
+                        </form>
+                    {% else %}
+                        <form action="{{url_for('bookmark')}}" method = "post">
+                            <button class="btn btn-outline-success rounded-pill" aria-pressed="false"
+                            type="submit" name="bookmark_product" value="true">Bookmark This</button>
+                        </form>
+                    {% endif %}
+                    {% if product.sku in notify_availability_products %}
+                        <form action="{{url_for('notify_availability')}}" method = "post">
+                            <button class="btn btn-outline-success rounded-pill active" aria-pressed="true"
+                            type="submit" name="notify_availability" value="false">Notify Me</button>
+                        </form>
+                    {% else %}
+                        <form action="{{url_for('notify_availability')}}" method = "post">
+                            <button class="btn btn-outline-success rounded-pill" aria-pressed="false"
+                            type="submit" name="notify_availability" value="true">Notify Me</button>
+                        </form>
+                    {% endif %}
+                </summary>
+                <p class="card-text"><strong>Description: </strong>{{ product.description }}</p>
+                <p class="card-text"><strong>Primary Category: </strong>{{ product.primary_category }}</p>
+                <p class="card-text"><strong>Sub Category 1: </strong>{{ product.sub_category_1 }}</p>
+                <p class="card-text"><strong>Sub Category 2: </strong>{{ product.sub_category_2 }}</p>
+                </details>
+            </div>
+            </div>
+            {% endif %}
             {% endfor %}
         </div>
     {% else %}
