@@ -60,9 +60,11 @@ def store():
                         sub_category_1,
                         sub_category_2
                     FROM products, categories
-                    WHERE products.category_id = categories.category_id"""
+                    WHERE products.category_id = categories.category_id
+                    LIMIT 10"""
             )
             products = cur.fetchall()
+            # products= cur.fetchmany(10)
 
         with open_db(dictCur=False) as cur:
             cur.execute(
@@ -176,34 +178,74 @@ def buy():
         print(request.form["sku"])
         print(request.form["quantity"])
         with open_db() as cur:
+            cur.execute(f"""SELECT available_stock
+                            FROM products
+                            WHERE sku='{request.form["sku"]}'""")
+            stock = (cur.fetchone())["available_stock"]
+
             cur.execute(f"""SELECT *
-                            FROM credentials
-                            WHERE username='{session["username"]}'""")
+                FROM credentials
+                WHERE username='{session["username"]}'""")
             user = cur.fetchone()
-            cur.execute(f"""INSERT INTO boughtBy(sku, person_id, quantity)
-                            VALUES ('{request.form["sku"]}', '{user["person_id"]}','{request.form["quantity"]}' )""")
+
+            if stock >= int(request.form["quantity"]):
+                new_stock = stock - int(request.form["quantity"])
+                print(new_stock)
+                cur.execute(f"""UPDATE products
+                                SET available_stock={new_stock}
+                                WHERE sku='{request.form["sku"]}'""")
+                cur.execute(f"""INSERT INTO boughtBy(sku, person_id, quantity)
+                                VALUES ('{request.form["sku"]}', '{user["person_id"]}','{request.form["quantity"]}' )""")
+            else:
+                flash(
+                    f"Sorry! Only {stock} number of that product are available!", "danger"
+                )
     return redirect(request.referrer)
 
 
 @app.route("/bookmark", methods=["POST"])
 def bookmark():
     if request.method == "POST":
-        print(request.form["bookmark_product"])
-        if request.form["bookmark_product"] == "true":
-            print("bookmark this")
-        elif request.form["bookmark_product"] == "false":
-            print("unbookmark this")
+        with open_db() as cur:
+            cur.execute(f"""SELECT *
+                            FROM credentials
+                            WHERE username='{session["username"]}'""")
+            user = cur.fetchone()
+            cur.execute(f"""SELECT SKU, person_id
+                            FROM bookmarkedBy
+                            WHERE   sku='{request.form["sku"]}'
+                                    AND person_id='{user["person_id"]}'""")
+            bookmarked_product = cur.fetchone()
+            if bookmarked_product is None:
+                cur.execute(f"""INSERT INTO bookmarkedby(sku, person_id)
+                                VALUES ('{request.form["sku"]}', '{user["person_id"]}')""")
+            else:
+                cur.execute(f"""DELETE FROM bookmarkedby
+                            WHERE sku='{request.form["sku"]}'
+                                    AND person_id='{user["person_id"]}'""")
     return redirect(request.referrer)
 
 @app.route("/notify_availability", methods=["POST"])
 def notify_availability():
     if request.method == "POST":
-        print(request.form["notify_availability"])
-        if request.form["notify_availability"] == "true":
-            print("notify availability of this")
-        elif request.form["notify_availability"] == "false":
-            print("unnotify availability of this")
+        with open_db() as cur:
+            cur.execute(f"""SELECT *
+                            FROM credentials
+                            WHERE username='{session["username"]}'""")
+            user = cur.fetchone()
+            cur.execute(f"""SELECT SKU, person_id
+                            FROM notifyAvailability
+                            WHERE   sku='{request.form["sku"]}'
+                                    AND person_id='{user["person_id"]}'""")
+            waitlisted_products = cur.fetchone()
+            if waitlisted_products is None:
+                cur.execute(f"""INSERT INTO notifyAvailability(sku, person_id)
+                                VALUES ('{request.form["sku"]}', '{user["person_id"]}')""")
+            else:
+                cur.execute(f"""DELETE FROM notifyAvailability
+                                WHERE sku='{request.form["sku"]}'
+                                    AND person_id='{user["person_id"]}'""")
     return redirect(request.referrer)
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port="2010")
+    app.run(host="0.0.0.0", port="2000")

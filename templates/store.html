@@ -24,12 +24,12 @@
                         {% if product.sku in bookmarked_products %}
                         <form action="{{url_for('bookmark')}}" method = "post">
                             <button class="btn btn-outline-success rounded-pill active m-auto" aria-pressed="true"
-                            type="submit" name="bookmark_product" value="false">Bookmark This</button>
+                            type="submit" name="sku" value="{{ product.sku }}">Bookmark This</button>
                         </form>
                         {% else %}
                             <form action="{{url_for('bookmark')}}" method = "post">
                                 <button class="btn btn-outline-success rounded-pill m-auto" aria-pressed="false"
-                                type="submit" name="bookmark_product" value="true">Bookmark This</button>
+                                type="submit" name="sku" value="{{ product.sku }}">Bookmark This</button>
                             </form>
                         {% endif %}
                     </div>
@@ -37,12 +37,12 @@
                     {% if product.sku in notify_availability_products %}
                         <form action="{{url_for('notify_availability')}}" method = "post">
                             <button class="btn btn-outline-success rounded-pill active" aria-pressed="true"
-                            type="submit" name="notify_availability" value="false">Notify Me</button>
+                            type="submit" name="sku" value="{{ product.sku }}">Notify Me</button>
                         </form>
                     {% else %}
                         <form action="{{url_for('notify_availability')}}" method = "post">
                             <button class="btn btn-outline-success rounded-pill" aria-pressed="false"
-                            type="submit" name="notify_availability" value="true">Notify Me</button>
+                            type="submit" name="sku" value="{{ product.sku }}">Notify Me</button>
                         </form>
                     {% endif %}
                     </div>
