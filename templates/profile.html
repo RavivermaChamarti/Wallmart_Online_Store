@@ -1,8 +1,12 @@
 {% extends "layout.html" %} {% block content %}
-<div class="button-container" style="display: flex; flex-direction: column; justify-content: flex-end; position: fixed; top: 20px; right: 10px; margin-top: 30px;">
-    <a href="#purchased_items" class="btn btn-secondary btn-sm active" role="button">Purchases</a>
-    <a href="#bookmarked_items" class="btn btn-secondary btn-sm active" role="button">Bookmarked</a>
-    <a href="#waitlist_items" class="btn btn-secondary btn-sm active" role="button">Waitlist</a>
+<div class="dropdown" style="display: flex; flex-direction: column; justify-content: flex-end; position: fixed; top: 30px; right: 10px; margin-top: 40px;">
+  <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+    <i class="bi bi-justify"></i>  </button>
+  <ul class="dropdown-menu">
+    <li><a href="#purchased_items"  class="dropdown-item">Purchases</a></li>
+    <li><a href="#bookmarked_items" class="dropdown-item">Bookmarked</a></li>
+    <li><a href="#waitlist_items"   class="dropdown-item">Waitlist</a></li>
+  </ul>
 </div>
 {% if "username" in session %}
 <div class="col-xs-6">
