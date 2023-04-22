@@ -1,6 +1,81 @@
 {% extends "layout.html" %} {% block content %}
+<div class="button-container" style="display: flex; flex-direction: column; justify-content: flex-end; position: fixed; top: 20px; right: 10px; margin-top: 30px;">
+    <a href="#purchased_items" class="btn btn-secondary btn-sm active" role="button">Purchases</a>
+    <a href="#bookmarked_items" class="btn btn-secondary btn-sm active" role="button">Bookmarked</a>
+    <a href="#waitlist_items" class="btn btn-secondary btn-sm active" role="button">Waitlist</a>
+</div>
 {% if "username" in session %}
-    <h1>Hello! Welcome to your Profile Page</h1>
+<div class="col-xs-6">
+<h2 class="sub-header" id="purchased_items">Purchases</h2>
+  <div class="table-responsive-lg">
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <th class="col-md-1">#</th>
+                <th class="col-md-6">Item</th>
+                <th class="col-md-1">Price</th>
+                <th class="col-md-1">Quantity</th>
+                <th class="col-md-1">Spent</th>
+                <th class="col-md-2">On</th>
+            </tr>
+            </thead>
+            <tbody>
+                {% for product in purchased_items %}
+                <tr>
+                    <th scope="row">{{loop.index}}]</th>
+                    <td class="col-md-6"><a href="{{ product.url }}" class="card-link"><h5 class="card-title">{{ product.title }}</h5></a></td>
+                    <td class="col-md-1">{{ product.price }}({{ product.currency }})</td>
+                    <td class="col-md-1">{{ product.quantity }}</td>
+                    <td class="col-md-1">{{ product.spent }}</td>
+                    <td class="col-md-2">{{ product.transaction_time }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+<div class="col-xs-6">
+    <h2 class="sub-header" id="bookmarked_items">Bookmarked Items</h2>
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <th class="col" style="width: 4%">#</th>
+                <th class="col-md-6">Item</th>
+            </tr>
+            </thead>
+            <tbody>
+                {% for product in bookmarked_items %}
+                <tr>
+                    <th scope="row">{{loop.index}}]</th>
+                    <td class="col-md-6"><a href="{{ product.url }}" class="card-link"><h5 class="card-title">{{ product.title }}</h5></a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+<div class="col-xs-6">
+    <h2 class="sub-header" id="waitlist_items">Waitlist Items</h2>
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <th class="col" style="width: 4%">#</th>
+                <th class="col-md-6">Item</th>
+            </tr>
+            </thead>
+            <tbody>
+                {% for product in waitlist_items %}
+                <tr>
+                    <th scope="row">{{loop.index}}]</th>
+                    <td class="col-md-6"><a href="{{ product.url }}" class="card-link"><h5 class="card-title">{{ product.title }}</h5></a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
 {% else %}
     <h3>You Are <strong>Not</strong> Authorized To View This Page</h3>
 {% endif %}
