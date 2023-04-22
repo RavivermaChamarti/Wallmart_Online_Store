@@ -102,7 +102,55 @@ def admin():
 
 @app.route("/profile")
 def profile():
-    return render_template("profile.html", title="Profile")
+    with open_db() as cur:
+        cur.execute(f""" SELECT url, title, price, currency,  quantity, (price * quantity) AS spent,
+                            TO_CHAR(
+                                (bought_on AT TIME ZONE 'UTC'
+                                    AT TIME ZONE 'America/New_York'),
+                                    'Mon DD, YYYY, HH24:MI:SS ') AS transaction_time
+                        FROM products, boughtby, credentials
+                        WHERE credentials.username = '{session["username"]}'
+                                AND boughtby.person_id = credentials.person_id
+                                AND products.sku = boughtby.sku
+                    """)
+        purchased_items = cur.fetchall()
+
+        cur.execute(f""" SELECT url, title
+                        FROM products, bookmarkedBy, credentials
+                        WHERE credentials.username = '{session["username"]}'
+                                AND bookmarkedBy.person_id = credentials.person_id
+                                AND products.sku = bookmarkedBy.sku
+                    """)
+        bookmarked_items = cur.fetchall()
+
+        cur.execute(f""" SELECT url, title
+                        FROM products, notifyAvailability, credentials
+                        WHERE credentials.username = '{session["username"]}'
+                                AND notifyAvailability.person_id = credentials.person_id
+                                AND products.sku = notifyAvailability.sku
+                    """)
+        waitlist_items = cur.fetchall()
+
+        cur.execute(f"""SELECT categories.primary_category, SUM(boughtby.quantity * products.price) as total
+                        FROM products, boughtBy, credentials, categories
+                        WHERE products.category_id = categories.category_id
+                                AND boughtBy.sku = products.sku
+                                AND boughtBy.person_iD = credentials.person_iD
+                        GROUP BY categories.primary_category, credentials.username
+                        HAVING credentials.username = '{session["username"]}'
+                    """)
+        transaction_breakdown = cur.fetchall()
+
+        cur.execute(f"""SELECT SUM(boughtby.quantity * products.price) as total
+                        FROM products, boughtBy, credentials, categories
+                        WHERE products.category_id = categories.category_id
+                                AND boughtBy.sku = products.sku
+                                AND boughtBy.person_iD = credentials.person_iD
+                        GROUP BY credentials.username
+                        HAVING credentials.username = '{session["username"]}'
+                    """)
+        total_spent=cur.fetchone()
+    return render_template("profile.html", title="Profile", purchased_items=purchased_items, bookmarked_items=bookmarked_items, waitlist_items=waitlist_items,transaction_breakdown=transaction_breakdown, total_spent=total_spent)
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -200,7 +248,7 @@ def buy():
                 flash(
                     f"Sorry! Only {stock} number of that product are available!", "danger"
                 )
-    return redirect(request.referrer)
+    return redirect(str(request.referrer)+ f'#{request.form["sku"]}')
 
 
 @app.route("/bookmark", methods=["POST"])
@@ -248,4 +296,4 @@ def notify_availability():
     return redirect(request.referrer)
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port="2000")
+    app.run(host="0.0.0.0", port="2000", debug=True)

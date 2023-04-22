@@ -9,7 +9,7 @@
             <div class="card-body">
                 <details>
                 <summary>
-                    <a href="{{ product.url }}" class="card-link"><h5 class="card-title">{{ product.title }}</h5></a>
+                    <a href="{{ product.url }}" class="card-link"><h5 class="card-title" id="{{ product.sku }}">{{ product.title }}</h5></a>
                     <p class="card-text"><small class="text-muted">{{ product.brand }}</small></p>
                     <h6><p class="card-text"> {{ product.price }} {{ product.currency }} </p> </h6>
                     <div class="mt-2">
@@ -17,7 +17,7 @@
                         <button class="btn btn-warning btn-md rounded-pill m-auto"
                             type="submit" name="sku" value="{{ product.sku }}"> Buy </button>
                         <input type="number" id="quantity" name="quantity" placeholder="1"
-                            min="1" max="10">
+                            min="1" max="10" value="1">
                     </form>
                     </div>
                     <div class="m-2">
