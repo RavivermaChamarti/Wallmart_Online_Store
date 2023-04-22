@@ -6,6 +6,7 @@
     <li><a href="#purchased_items"  class="dropdown-item">Purchases</a></li>
     <li><a href="#bookmarked_items" class="dropdown-item">Bookmarked</a></li>
     <li><a href="#waitlist_items"   class="dropdown-item">Waitlist</a></li>
+    <li><a href="#breakdown_list"   class="dropdown-item">Expenditure Breakdown</a></li>
   </ul>
 </div>
 {% if "username" in session %}
@@ -38,6 +39,7 @@
         </table>
     </div>
 </div>
+<div class="space" style="margin-top: 50px;"></div>
 <div class="col-xs-6">
     <h2 class="sub-header" id="bookmarked_items">Bookmarked Items</h2>
     <div class="table-responsive">
@@ -59,6 +61,7 @@
         </table>
     </div>
 </div>
+<div class="space" style="margin-top: 50px;"></div>
 <div class="col-xs-6">
     <h2 class="sub-header" id="waitlist_items">Waitlist Items</h2>
     <div class="table-responsive">
@@ -76,6 +79,35 @@
                     <td class="col-md-6"><a href="{{ product.url }}" class="card-link"><h5 class="card-title">{{ product.title }}</h5></a></td>
                 </tr>
                 {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+<div class="space" style="margin-top: 50px;"></div>
+<div class="col-xs-6">
+    <h2 class="sub-header" id="breakdown_list">Expenditure Breakdown</h2>
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <th class="col" style="width: 4%">#</th>
+                <th class="col-md-6">Category</th>
+                <th class="col-md-1">Spent</th>
+            </tr>
+            </thead>
+            <tbody>
+                {% for category in transaction_breakdown %}
+                <tr>
+                    <th scope="row">{{loop.index}}]</th>
+                    <td class="col-md-6"><h5 class="card-title">{{ category.primary_category }}</h5> </td>
+                    <td class="col-md-6"><h5 class="card-title">{{ category.total }}</h5></td>
+                </tr>
+                {% endfor %}
+                <tr>
+                    <th scope="row"></th>
+                    <td class="col-md-6"><h5 class="card-title"><strong>Total</strong>  </h5></td>
+                    <td class="col-md-6"><h5 class="card-title"><strong>{{ total_spent.total }}</strong></h5></td>
+                </tr>
             </tbody>
         </table>
     </div>

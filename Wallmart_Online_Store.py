@@ -130,7 +130,27 @@ def profile():
                                 AND products.sku = notifyAvailability.sku
                     """)
         waitlist_items = cur.fetchall()
-    return render_template("profile.html", title="Profile", purchased_items=purchased_items, bookmarked_items=bookmarked_items, waitlist_items=waitlist_items)
+
+        cur.execute(f"""SELECT categories.primary_category, SUM(boughtby.quantity * products.price) as total
+                        FROM products, boughtBy, credentials, categories
+                        WHERE products.category_id = categories.category_id
+                                AND boughtBy.sku = products.sku
+                                AND boughtBy.person_iD = credentials.person_iD
+                        GROUP BY categories.primary_category, credentials.username
+                        HAVING credentials.username = '{session["username"]}'
+                    """)
+        transaction_breakdown = cur.fetchall()
+
+        cur.execute(f"""SELECT SUM(boughtby.quantity * products.price) as total
+                        FROM products, boughtBy, credentials, categories
+                        WHERE products.category_id = categories.category_id
+                                AND boughtBy.sku = products.sku
+                                AND boughtBy.person_iD = credentials.person_iD
+                        GROUP BY credentials.username
+                        HAVING credentials.username = '{session["username"]}'
+                    """)
+        total_spent=cur.fetchone()
+    return render_template("profile.html", title="Profile", purchased_items=purchased_items, bookmarked_items=bookmarked_items, waitlist_items=waitlist_items,transaction_breakdown=transaction_breakdown, total_spent=total_spent)
 
 
 @app.route("/login", methods=["GET", "POST"])
