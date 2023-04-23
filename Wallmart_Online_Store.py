@@ -97,60 +97,86 @@ def store():
 
 @app.route("/admin")
 def admin():
-    return render_template("admin.html", title="Admin")
+    if "username" in session:
+        if session["username"] == "Ravi":
+            with open_db() as cur:
+                cur.execute(f"""SELECT primary_category, sub_category_1, sub_category_2, SUM(products.price * boughtby.quantity) AS total
+                                FROM products, boughtby, categories
+                                WHERE products.sku = boughtby.sku
+                                        AND products.category_id = categories.category_id
+                                GROUP BY primary_category, sub_category_1, sub_category_2
+                            """)
+                earnings_by_category = cur.fetchall()
+
+
+                cur.execute(f"""SELECT SUM(boughtby.quantity * products.price) AS total
+                                FROM products, boughtBy
+                                WHERE products.sku = boughtby.sku
+                            """)
+                total_spent=cur.fetchone()
+
+                cur.execute(f"""SELECT url, title, brand, sku
+                                FROM products
+                                WHERE available_stock = 0
+                            """)
+                out_of_stock = cur.fetchall()
+        return render_template("admin.html", title="Admin", earnings_by_category=earnings_by_category,total_spent=total_spent, out_of_stock=out_of_stock)
+    return render_template("invalidUser.html", title="Invalid User")
 
 
 @app.route("/profile")
 def profile():
-    with open_db() as cur:
-        cur.execute(f""" SELECT url, title, price, currency,  quantity, (price * quantity) AS spent,
-                            TO_CHAR(
-                                (bought_on AT TIME ZONE 'UTC'
-                                    AT TIME ZONE 'America/New_York'),
-                                    'Mon DD, YYYY, HH24:MI:SS ') AS transaction_time
-                        FROM products, boughtby, credentials
-                        WHERE credentials.username = '{session["username"]}'
-                                AND boughtby.person_id = credentials.person_id
-                                AND products.sku = boughtby.sku
-                    """)
-        purchased_items = cur.fetchall()
+    if "username" in session:
+        with open_db() as cur:
+            cur.execute(f""" SELECT url, title, price, currency,  quantity, (price * quantity) AS spent,
+                                TO_CHAR(
+                                    (bought_on AT TIME ZONE 'UTC'
+                                        AT TIME ZONE 'America/New_York'),
+                                        'Mon DD, YYYY, HH24:MI:SS ') AS transaction_time
+                            FROM products, boughtby, credentials
+                            WHERE credentials.username = '{session["username"]}'
+                                    AND boughtby.person_id = credentials.person_id
+                                    AND products.sku = boughtby.sku
+                        """)
+            purchased_items = cur.fetchall()
 
-        cur.execute(f""" SELECT url, title
-                        FROM products, bookmarkedBy, credentials
-                        WHERE credentials.username = '{session["username"]}'
-                                AND bookmarkedBy.person_id = credentials.person_id
-                                AND products.sku = bookmarkedBy.sku
-                    """)
-        bookmarked_items = cur.fetchall()
+            cur.execute(f""" SELECT url, title
+                            FROM products, bookmarkedBy, credentials
+                            WHERE credentials.username = '{session["username"]}'
+                                    AND bookmarkedBy.person_id = credentials.person_id
+                                    AND products.sku = bookmarkedBy.sku
+                        """)
+            bookmarked_items = cur.fetchall()
 
-        cur.execute(f""" SELECT url, title
-                        FROM products, notifyAvailability, credentials
-                        WHERE credentials.username = '{session["username"]}'
-                                AND notifyAvailability.person_id = credentials.person_id
-                                AND products.sku = notifyAvailability.sku
-                    """)
-        waitlist_items = cur.fetchall()
+            cur.execute(f""" SELECT url, title
+                            FROM products, notifyAvailability, credentials
+                            WHERE credentials.username = '{session["username"]}'
+                                    AND notifyAvailability.person_id = credentials.person_id
+                                    AND products.sku = notifyAvailability.sku
+                        """)
+            waitlist_items = cur.fetchall()
 
-        cur.execute(f"""SELECT categories.primary_category, SUM(boughtby.quantity * products.price) as total
-                        FROM products, boughtBy, credentials, categories
-                        WHERE products.category_id = categories.category_id
-                                AND boughtBy.sku = products.sku
-                                AND boughtBy.person_iD = credentials.person_iD
-                        GROUP BY categories.primary_category, credentials.username
-                        HAVING credentials.username = '{session["username"]}'
-                    """)
-        transaction_breakdown = cur.fetchall()
+            cur.execute(f"""SELECT categories.primary_category, SUM(boughtby.quantity * products.price) as total
+                            FROM products, boughtBy, credentials, categories
+                            WHERE products.category_id = categories.category_id
+                                    AND boughtBy.sku = products.sku
+                                    AND boughtBy.person_iD = credentials.person_iD
+                            GROUP BY categories.primary_category, credentials.username
+                            HAVING credentials.username = '{session["username"]}'
+                        """)
+            transaction_breakdown = cur.fetchall()
 
-        cur.execute(f"""SELECT SUM(boughtby.quantity * products.price) as total
-                        FROM products, boughtBy, credentials, categories
-                        WHERE products.category_id = categories.category_id
-                                AND boughtBy.sku = products.sku
-                                AND boughtBy.person_iD = credentials.person_iD
-                        GROUP BY credentials.username
-                        HAVING credentials.username = '{session["username"]}'
-                    """)
-        total_spent=cur.fetchone()
-    return render_template("profile.html", title="Profile", purchased_items=purchased_items, bookmarked_items=bookmarked_items, waitlist_items=waitlist_items,transaction_breakdown=transaction_breakdown, total_spent=total_spent)
+            cur.execute(f"""SELECT SUM(boughtby.quantity * products.price) as total
+                            FROM products, boughtBy, credentials, categories
+                            WHERE products.category_id = categories.category_id
+                                    AND boughtBy.sku = products.sku
+                                    AND boughtBy.person_iD = credentials.person_iD
+                            GROUP BY credentials.username
+                            HAVING credentials.username = '{session["username"]}'
+                        """)
+            total_spent=cur.fetchone()
+        return render_template("profile.html", title="Profile", purchased_items=purchased_items, bookmarked_items=bookmarked_items, waitlist_items=waitlist_items,transaction_breakdown=transaction_breakdown, total_spent=total_spent)
+    return render_template("invalidUser.html", title="Invalid User")
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -223,8 +249,6 @@ def logout():
 @app.route("/buy", methods=["POST"])
 def buy():
     if request.method == "POST":
-        print(request.form["sku"])
-        print(request.form["quantity"])
         with open_db() as cur:
             cur.execute(f"""SELECT available_stock
                             FROM products
@@ -238,7 +262,6 @@ def buy():
 
             if stock >= int(request.form["quantity"]):
                 new_stock = stock - int(request.form["quantity"])
-                print(new_stock)
                 cur.execute(f"""UPDATE products
                                 SET available_stock={new_stock}
                                 WHERE sku='{request.form["sku"]}'""")
@@ -293,6 +316,37 @@ def notify_availability():
                 cur.execute(f"""DELETE FROM notifyAvailability
                                 WHERE sku='{request.form["sku"]}'
                                     AND person_id='{user["person_id"]}'""")
+    return redirect(request.referrer)
+
+
+
+@app.route("/restock", methods=["POST"])
+def restock():
+    if request.method == "POST":
+        with open_db() as cur:
+            cur.execute(f"""SELECT available_stock, title
+                            FROM products
+                            WHERE sku='{request.form["restock_item"]}'""")
+            stock = cur.fetchone()
+            new_stock = stock["available_stock"] + 200
+            cur.execute(f"""UPDATE products
+                            SET available_stock={new_stock}
+                            WHERE sku='{request.form["restock_item"]}'""")
+        flash(
+                f"{ stock['title'] } has been restocked", "success"
+            )
+    return redirect(request.referrer)
+
+@app.route("/restock_all", methods=["POST"])
+def restock_all():
+    if request.method == "POST":
+        with open_db() as cur:
+            cur.execute(f"""UPDATE products
+                            SET available_stock=200
+                            WHERE available_stock=0""")
+        flash(
+                f"All necessary products have been restocked", "success"
+            )
     return redirect(request.referrer)
 
 if __name__ == "__main__":
