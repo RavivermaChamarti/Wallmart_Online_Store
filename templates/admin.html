@@ -2,8 +2,73 @@
 {% block content %}
 {% if "username" in session %}
     {% if session["username"] == "Ravi" %}
-        <h1>Hello! Welcome to the Admk  page</h1>
-    {% endif %}
+        <h1>Hello! Welcome to the Admin page</h1>
+        <div class="col-xs-6">
+<h2 class="sub-header" id="breakdown_list">Expenditure Breakdown</h2>
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <th class="col" style="width: 4%">#</th>
+                <th class="col">Primary Category</th>
+                <th class="col">Sub Category 1</th>
+                <th class="col">Sub Category 2</th>
+                <th class="col">Earned</th>
+            </tr>
+            </thead>
+            <tbody>
+                {% for category in earnings_by_category %}
+                <tr>
+                    <th scope="row">{{loop.index}}]</th>
+                    <td class="col"><h5 class="card-title">{{ category.primary_category }}</h5> </td>
+                    <td class="col"><h5 class="card-title">{{ category.sub_category_1 }}</h5> </td>
+                    <td class="col"><h5 class="card-title">{{ category.sub_category_2 }}</h5> </td>
+                    <td class="col"><h5 class="card-title">{{ category.total }}</h5></td>
+                </tr>
+                {% endfor %}
+                <tr>
+                    <th scope="row"></th>
+                    <td class="col"><h4 class="card-title"><strong>Total</strong></h4></td>
+                    <td class="col"><h5 class="card-title"></h5> </td>
+                    <td class="col"><h5 class="card-title"></h5> </td>
+                    <td class="col"><h4 class="card-title"><strong>{{ total_spent.total }}</strong></h4></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+<div class="col-xs-6">
+<h2 class="sub-header" id="purchased_items">Products Out of Stock</h2>
+  <div class="table-responsive-lg">
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <th class="col">#</th>
+                <th class="col">Item</th>
+                <th class="col">
+                    <form action="{{url_for('restock_all')}}" method = "post">
+                        <button class="btn btn-outline-success btn-md" aria-pressed="false"
+                        type="submit" >Restock All</button>
+                    </form>
+                </th>
+            </tr>
+            </thead>
+            <tbody>
+                {% for product in out_of_stock %}
+                <tr>
+                    <th scope="row">{{loop.index}}]</th>
+                    <td class="col"><a href="{{ product.url }}" class="card-link"><h5 class="card-title">{{ product.title }}</h5></a></td>
+                    <td><form action="{{url_for('restock')}}" method = "post">
+                        <button class="btn btn-outline-success btn-md" aria-pressed="false"
+                        type="submit" name="restock_item" value="{{ product.sku }}">Restock</button>
+                    </form></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
 {% else %}
     <h3>You Are <strong>Not</strong> Authorized To View This Page</h3>
 {% endif %}{% endblock content%}

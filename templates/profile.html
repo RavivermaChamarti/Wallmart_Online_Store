@@ -16,23 +16,23 @@
         <table class="table table-striped">
             <thead>
             <tr>
-                <th class="col-md-1">#</th>
-                <th class="col-md-6">Item</th>
-                <th class="col-md-1">Price</th>
-                <th class="col-md-1">Quantity</th>
-                <th class="col-md-1">Spent</th>
-                <th class="col-md-2">On</th>
+                <th class="col"></th>#</th>
+                <th class="col"></th>Item</th>
+                <th class="col">Price</th>
+                <th class="col">Quantity</th>
+                <th class="col">Spent</th>
+                <th class="col">On</th>
             </tr>
             </thead>
             <tbody>
                 {% for product in purchased_items %}
                 <tr>
                     <th scope="row">{{loop.index}}]</th>
-                    <td class="col-md-6"><a href="{{ product.url }}" class="card-link"><h5 class="card-title">{{ product.title }}</h5></a></td>
-                    <td class="col-md-1">{{ product.price }}({{ product.currency }})</td>
-                    <td class="col-md-1">{{ product.quantity }}</td>
-                    <td class="col-md-1">{{ product.spent }}</td>
-                    <td class="col-md-2">{{ product.transaction_time }}</td>
+                    <td class="col"><a href="{{ product.url }}" class="card-link"><h5 class="card-title">{{ product.title }}</h5></a></td>
+                    <td class="col">{{ product.price }}({{ product.currency }})</td>
+                    <td class="col">{{ product.quantity }}</td>
+                    <td class="col">{{ product.spent }}</td>
+                    <td class="col">{{ product.transaction_time }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -47,14 +47,14 @@
             <thead>
             <tr>
                 <th class="col" style="width: 4%">#</th>
-                <th class="col-md-6">Item</th>
+                <th class="col">Item</th>
             </tr>
             </thead>
             <tbody>
                 {% for product in bookmarked_items %}
                 <tr>
                     <th scope="row">{{loop.index}}]</th>
-                    <td class="col-md-6"><a href="{{ product.url }}" class="card-link"><h5 class="card-title">{{ product.title }}</h5></a></td>
+                    <td class="col"><a href="{{ product.url }}" class="card-link"><h5 class="card-title">{{ product.title }}</h5></a></td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -69,14 +69,14 @@
             <thead>
             <tr>
                 <th class="col" style="width: 4%">#</th>
-                <th class="col-md-6">Item</th>
+                <th class="col">Item</th>
             </tr>
             </thead>
             <tbody>
                 {% for product in waitlist_items %}
                 <tr>
                     <th scope="row">{{loop.index}}]</th>
-                    <td class="col-md-6"><a href="{{ product.url }}" class="card-link"><h5 class="card-title">{{ product.title }}</h5></a></td>
+                    <td class="col"><a href="{{ product.url }}" class="card-link"><h5 class="card-title">{{ product.title }}</h5></a></td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -91,22 +91,22 @@
             <thead>
             <tr>
                 <th class="col" style="width: 4%">#</th>
-                <th class="col-md-6">Category</th>
-                <th class="col-md-1">Spent</th>
+                <th class="col">Category</th>
+                <th class="col">Spent</th>
             </tr>
             </thead>
             <tbody>
                 {% for category in transaction_breakdown %}
                 <tr>
                     <th scope="row">{{loop.index}}]</th>
-                    <td class="col-md-6"><h5 class="card-title">{{ category.primary_category }}</h5> </td>
-                    <td class="col-md-6"><h5 class="card-title">{{ category.total }}</h5></td>
+                    <td class="col"><h5 class="card-title">{{ category.primary_category }}</h5> </td>
+                    <td class="col"><h5 class="card-title">{{ category.total }}</h5></td>
                 </tr>
                 {% endfor %}
                 <tr>
                     <th scope="row"></th>
-                    <td class="col-md-6"><h5 class="card-title"><strong>Total</strong>  </h5></td>
-                    <td class="col-md-6"><h5 class="card-title"><strong>{{ total_spent.total }}</strong></h5></td>
+                    <td class="col"><h5 class="card-title"><strong>Total</strong>  </h5></td>
+                    <td class="col"><h5 class="card-title"><strong>{{ total_spent.total }}</strong></h5></td>
                 </tr>
             </tbody>
         </table>
