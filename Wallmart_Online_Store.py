@@ -403,29 +403,6 @@ def restock_all():
                                     """
                     , subtype='html')
                     smtp.send_message(msg)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-            cur.execute(f"""UPDATE products
-                            SET available_stock=200
-                            WHERE available_stock=0""")
         flash(
                 f"All necessary products have been restocked", "success"
             )
