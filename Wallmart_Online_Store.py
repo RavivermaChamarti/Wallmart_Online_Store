@@ -15,7 +15,7 @@ from forms import LoginForms, RegistrationForms
 app = Flask(__name__)
 
 app.config["SECRET_KEY"] = os.environ["WALLMART_SECRET_KEY"]
-EMAIL_ADDRESS = os.environ["EMAIL_USERNAME"]
+EMAIL_ADDRESS = os.environ["EMAIL_USER"]
 EMAIL_PASSWORD = os.environ["EMAIL_PASSWORD"]
 bcrypt = Bcrypt()
 
@@ -407,6 +407,37 @@ def restock_all():
                 f"All necessary products have been restocked", "success"
             )
     return redirect(request.referrer)
+
+
+
+def create_fake_users():
+    with open_db() as cur:
+        for i in range (36):
+            cur.execute(
+                f"""INSERT INTO persons(first_name, last_name, email_id)
+                            VALUES ('FN{i}','LN{i}', 'fakeEmail{i}@gmail.com' )"""
+            )
+            cur.execute(
+                f"""SELECT person_id
+                            FROM persons
+                            WHERE first_name='FN{i}'
+                                    AND last_name='LN{i}'
+                                    AND email_id='fakeEmail{i}@gmail.com'"""
+            )
+            user = cur.fetchone()
+            person_id = user["person_id"]
+            salt = token_hex(16)
+            password_hash = bcrypt.generate_password_hash(
+                salt + "abcdefgh"
+            ).decode("utf-8")
+            cur.execute(
+                f"""INSERT INTO credentials(username, person_iD, salt, password_hash)
+                            VALUES ('FN{i}','{person_id}', '{salt}', '{password_hash}' )"""
+            )
+            flash(
+                f"Account Created for FN{i} LN{i}!",
+                "success",
+            )
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port="2000", debug=True)
