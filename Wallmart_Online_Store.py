@@ -1,6 +1,8 @@
 import contextlib
 import itertools
 import os
+import smtplib
+from email.message import EmailMessage
 from secrets import token_hex
 
 import psycopg2
@@ -13,6 +15,8 @@ from forms import LoginForms, RegistrationForms
 app = Flask(__name__)
 
 app.config["SECRET_KEY"] = os.environ["WALLMART_SECRET_KEY"]
+EMAIL_ADDRESS = os.environ["EMAIL_USERNAME"]
+EMAIL_PASSWORD = os.environ["EMAIL_PASSWORD"]
 bcrypt = Bcrypt()
 
 
@@ -60,9 +64,9 @@ def store():
                         sub_category_1,
                         sub_category_2
                     FROM products, categories
-                    WHERE products.category_id = categories.category_id
-                    LIMIT 10"""
+                    WHERE products.category_id = categories.category_id"""
             )
+            # LIMIT 10
             products = cur.fetchall()
             # products= cur.fetchmany(10)
 
@@ -328,22 +332,77 @@ def restock():
                             FROM products
                             WHERE sku='{request.form["restock_item"]}'""")
             stock = cur.fetchone()
-            new_stock = stock["available_stock"] + 200
-            cur.execute(f"""UPDATE products
-                            SET available_stock={new_stock}
-                            WHERE sku='{request.form["restock_item"]}'""")
-        flash(
-                f"{ stock['title'] } has been restocked", "success"
-            )
+            if stock["available_stock"]==0:
+                new_stock = stock["available_stock"] + 200
+                cur.execute(f"""UPDATE products
+                                SET available_stock={new_stock}
+                                WHERE sku='{request.form["restock_item"]}'""")
+
+                cur.execute(f"""SELECT email_id
+                                FROM notifyAvailability, persons
+                                WHERE sku='{request.form["restock_item"]}'
+                                        AND notifyAvailability.person_id=persons.person_id""")
+                remind_users=cur.fetchall()
+
+                with smtplib.SMTP("smtp.gmail.com", 587) as smtp:
+                    smtp.ehlo()
+                    smtp.starttls()
+                    smtp.ehlo()
+
+                    smtp.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
+                    for person in remind_users:
+                        msg = EmailMessage()
+                        msg["Subject"]="Product back in stock"
+                        msg["From"]=EMAIL_ADDRESS
+                        msg["To"]=person["email_id"]
+                        msg.set_content(f"""
+                                        <!DOCTYPE html>
+                                        <html>
+                                            <p>Thank you for your interest in our <strong>{ stock['title'] }</strong>.</p>
+                                            <p>We are happy to inform you that the product you have been waiting for is now back in stock!</p>
+                                        </html>
+                                        """
+                        , subtype='html')
+                        smtp.send_message(msg)
+
+                    flash(f"{ stock['title'] } has been restocked", "success")
+            else:
+                flash(f"{ stock['title'] } is already in stock", "danger")
     return redirect(request.referrer)
 
 @app.route("/restock_all", methods=["POST"])
 def restock_all():
     if request.method == "POST":
         with open_db() as cur:
+            cur.execute(f"""SELECT email_id, title
+                            FROM products, persons, notifyAvailability
+                            WHERE persons.person_id = notifyAvailability.person_id
+                                    AND products.sku = notifyAvailability.sku
+                                    AND products.available_stock=0""")
+            remind_users=cur.fetchall()
             cur.execute(f"""UPDATE products
                             SET available_stock=200
                             WHERE available_stock=0""")
+            with smtplib.SMTP("smtp.gmail.com", 587) as smtp:
+                smtp.ehlo()
+                smtp.starttls()
+                smtp.ehlo()
+
+                smtp.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
+                for person in remind_users:
+                    msg = EmailMessage()
+                    msg["Subject"]="Product back in stock"
+                    msg["From"]=EMAIL_ADDRESS
+                    msg["To"]=person["email_id"]
+                    msg.set_content(f"""
+                                    <!DOCTYPE html>
+                                    <html>
+                                        <p>Thank you for your interest in our <strong>{ person['title'] }</strong>.</p>
+                                        <p>We are happy to inform you that the product you have been waiting for is now back in stock!</p>
+                                    </html>
+                                    """
+                    , subtype='html')
+                    smtp.send_message(msg)
         flash(
                 f"All necessary products have been restocked", "success"
             )
