@@ -64,7 +64,8 @@ def store():
                         sub_category_1,
                         sub_category_2
                     FROM products, categories
-                    WHERE products.category_id = categories.category_id"""
+                    WHERE products.category_id = categories.category_id
+                    ORDER BY sku DESC"""
             )
             # LIMIT 10
             products = cur.fetchall()
