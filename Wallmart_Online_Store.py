@@ -5,10 +5,15 @@ import smtplib
 from email.message import EmailMessage
 from secrets import token_hex
 
+import numpy as np
+import pandas as pd
 import psycopg2
+import turicreate as tc
 from flask import Flask, flash, redirect, render_template, request, session, url_for
 from flask_bcrypt import Bcrypt
+from implicit.als import AlternatingLeastSquares
 from psycopg2.extras import RealDictCursor
+from scipy.sparse import coo_matrix
 
 from forms import LoginForms, RegistrationForms
 
@@ -127,6 +132,83 @@ def admin():
                 out_of_stock = cur.fetchall()
         return render_template("admin.html", title="Admin", earnings_by_category=earnings_by_category,total_spent=total_spent, out_of_stock=out_of_stock)
     return render_template("invalidUser.html", title="Invalid User")
+
+
+@app.route("/reccomendations")
+def reccomendations():
+    if "username" in session:
+        with open_db(dictCur=False) as cur:
+            # cur.execute(""" SELECT boughtBy.person_id, categories.category_id, COUNT(*) AS interactions
+            #                 FROM boughtBy, products, categories
+            #                 WHERE boughtBy.sku = products.sku
+            #                         AND products.category_id=categories.category_id
+            #                 GROUP BY boughtBy.person_id, categories.category_id
+            #                 ORDER BY boughtBy.person_id ASC""")
+
+            cur.execute(""" SELECT boughtBy.person_id, boughtBy.sku, categories.category_id
+                            FROM boughtBy, products, categories
+                            WHERE boughtBy.sku = products.sku
+                                    AND products.category_id=categories.category_id;""")
+
+            grouped_data = cur.fetchall()
+            # for i in grouped_data:
+            #     print(i)
+            columns = ['user_id', 'product_id', 'category_id']
+            data = pd.DataFrame(grouped_data, columns=columns)
+            print(data)
+
+            sf_data = tc.SFrame(data)
+            print("Hello")
+            print(sf_data)
+
+            # Create a model using the implicit collaborative filtering
+            model = tc.item_similarity_recommender.create(sf_data, user_id='user_id', item_id='category_id', similarity_type='cosine')
+            # Generate recommendations
+            recommendations = model.recommend(k=10)
+
+            # Convert the recommendations to a DataFrame
+            df_recommendations = recommendations.to_dataframe()
+            print("Reccomendatins:")
+            print(df_recommendations)
+
+
+            # # Create a dictionary to hold the recommendations for each user
+            # recommendations = {}
+
+            # # Iterate over each user and retrieve their top 10 product categories
+            # for user_id in set([row[0] for row in grouped_data]):
+            #     user_scores = [row for row in grouped_data if row[0] == user_id]
+            #     user_scores.sort(key=lambda x: x[2], reverse=True)  # Sort by interaction score
+            #     top_categories = [row[1] for row in user_scores[:10]]
+            #     recommendations[user_id] = top_categories
+
+            # columns = [desc[0] for desc in cur.description]
+
+            # data = pd.DataFrame(data, columns=columns)
+            # data = tc.SFrame(data)
+            # user_ids = data['person_id'].astype("category")
+            # item_ids = data['category_id'].astype("category")
+            # user_item_data = coo_matrix((np.ones(len(data)), (user_ids.cat.codes, item_ids.cat.codes)))
+
+            # model = AlternatingLeastSquares(factors=50, regularization=0.01, iterations=20)
+            # model.fit(user_item_data.T)
+
+            # user_id = 2
+            # user_idx = np.where(user_ids.cat.categories == user_id)[0][0]
+            # scores = model.recommend(user_idx, user_item_data.tocsr(), N=10)
+            # # print(scores)
+
+            # # recommendations = []
+            # # for item_idx, score in scores:
+            # #     item_id = item_ids.cat.categories[item_idx]
+            # #     recommendations.append((item_id, score))
+
+            # # for item_id, score in recommendations:
+            # #     print(f"Item ID: {item_id}, Score: {score}")
+        return render_template("home.html")
+    return render_template("invalidUser.html", title="Invalid User")
+
+
 
 
 @app.route("/profile")
