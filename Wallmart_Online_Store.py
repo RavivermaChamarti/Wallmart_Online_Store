@@ -210,9 +210,6 @@ def reccomendations():
                             )
                             notify_availability_products_tuples = cur.fetchall()
                             notify_availability_products = list(itertools.chain(*notify_availability_products_tuples))
-
-
-
                         return render_template("reccomendation.html", reccomendations_present=reccomendations_present, products=products,bookmarked_products=bookmarked_products,notify_availability_products=notify_availability_products)
                     else:
                         reccomendations_present=False
@@ -221,8 +218,6 @@ def reccomendations():
                 reccomendations_present=False
                 return render_template("reccomendation.html", reccomendations_present=reccomendations_present)
     return render_template("invalidUser.html", title="Invalid User")
-
-
 
 
 @app.route("/profile")
@@ -395,7 +390,7 @@ def bookmark():
                 cur.execute(f"""DELETE FROM bookmarkedby
                             WHERE sku='{request.form["sku"]}'
                                     AND person_id='{user["person_id"]}'""")
-    return redirect(request.referrer)
+    return redirect(str(request.referrer)+ f'#{request.form["sku"]}')
 
 @app.route("/notify_availability", methods=["POST"])
 def notify_availability():
@@ -417,7 +412,7 @@ def notify_availability():
                 cur.execute(f"""DELETE FROM notifyAvailability
                                 WHERE sku='{request.form["sku"]}'
                                     AND person_id='{user["person_id"]}'""")
-    return redirect(request.referrer)
+    return redirect(str(request.referrer)+ f'#{request.form["sku"]}')
 
 
 
@@ -537,4 +532,4 @@ def create_fake_users():
             )
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port="2000", debug=True)
+    app.run(host="0.0.0.0", port="5000", debug=True)
