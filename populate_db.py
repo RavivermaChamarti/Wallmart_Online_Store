@@ -18,7 +18,6 @@ cur = conn.cursor()
 
 # Delete existing data from tables
 cur.execute("DELETE FROM products;")
-cur.execute("DELETE FROM products_stage;")
 cur.execute("DELETE FROM categories;")
 
 

@@ -1,0 +1,67 @@
+{% extends "layout.html" %}
+{% block content %}
+    {% if "username" in session %}
+    {% if reccomendations_present %}
+        <h1>Hello! {{ session['username'] }} These are some products we reccomend for you</h1>
+        <div class="card-deck">
+            {% for product in products %}
+            {% if product.url is defined %}
+            <div class="card bg-light mb-3">
+            <div class="card-body">
+                <details>
+                <summary>
+                    <a href="{{ product.url }}" class="card-link"><h5 class="card-title" id="{{ product.sku }}">{{ product.title }}</h5></a>
+                    <p class="card-text"><small class="text-muted">{{ product.brand }}</small></p>
+                    <h6><p class="card-text"> {{ product.price }} {{ product.currency }} </p> </h6>
+                    <div class="mt-2">
+                        <form action="{{url_for('buy')}}" method = "post">
+                        <button class="btn btn-warning btn-md rounded-pill m-auto"
+                            type="submit" name="sku" value="{{ product.sku }}"> Buy </button>
+                        <input type="number" id="quantity" name="quantity" placeholder="1"
+                            min="1" max="10" value="1">
+                    </form>
+                    </div>
+                    <div class="m-2">
+                        {% if product.sku in bookmarked_products %}
+                        <form action="{{url_for('bookmark')}}" method = "post">
+                            <button class="btn btn-outline-success rounded-pill active m-auto" aria-pressed="true"
+                            type="submit" name="sku" value="{{ product.sku }}">Bookmark This</button>
+                        </form>
+                        {% else %}
+                            <form action="{{url_for('bookmark')}}" method = "post">
+                                <button class="btn btn-outline-success rounded-pill m-auto" aria-pressed="false"
+                                type="submit" name="sku" value="{{ product.sku }}">Bookmark This</button>
+                            </form>
+                        {% endif %}
+                    </div>
+                    <div class="m-2">
+                    {% if product.sku in notify_availability_products %}
+                        <form action="{{url_for('notify_availability')}}" method = "post">
+                            <button class="btn btn-outline-success rounded-pill active" aria-pressed="true"
+                            type="submit" name="sku" value="{{ product.sku }}">Notify Me</button>
+                        </form>
+                    {% else %}
+                        <form action="{{url_for('notify_availability')}}" method = "post">
+                            <button class="btn btn-outline-success rounded-pill" aria-pressed="false"
+                            type="submit" name="sku" value="{{ product.sku }}">Notify Me</button>
+                        </form>
+                    {% endif %}
+                    </div>
+                </summary>
+                <p class="card-text"><strong>Description: </strong>{{ product.description }}</p>
+                <p class="card-text"><strong>Primary Category: </strong>{{ product.primary_category }}</p>
+                <p class="card-text"><strong>Sub Category 1: </strong>{{ product.sub_category_1 }}</p>
+                <p class="card-text"><strong>Sub Category 2: </strong>{{ product.sub_category_2 }}</p>
+                </details>
+            </div>
+            </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+        {% else %}
+            <h3>Sorry, But you do <strong>not</strong> have any reccomendations at this point</h3>
+        {% endif %}
+    {% else %}
+        <h3>You Are <strong>Not</strong> Authorized To View This Page</h3>
+    {% endif %}
+{% endblock content%}
