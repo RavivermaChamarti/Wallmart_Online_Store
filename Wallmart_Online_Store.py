@@ -138,74 +138,53 @@ def admin():
 def reccomendations():
     if "username" in session:
         with open_db(dictCur=False) as cur:
-            # cur.execute(""" SELECT boughtBy.person_id, categories.category_id, COUNT(*) AS interactions
-            #                 FROM boughtBy, products, categories
-            #                 WHERE boughtBy.sku = products.sku
-            #                         AND products.category_id=categories.category_id
-            #                 GROUP BY boughtBy.person_id, categories.category_id
-            #                 ORDER BY boughtBy.person_id ASC""")
-
             cur.execute(""" SELECT boughtBy.person_id, boughtBy.sku, categories.category_id
                             FROM boughtBy, products, categories
                             WHERE boughtBy.sku = products.sku
                                     AND products.category_id=categories.category_id;""")
 
             grouped_data = cur.fetchall()
-            # for i in grouped_data:
-            #     print(i)
             columns = ['user_id', 'product_id', 'category_id']
             data = pd.DataFrame(grouped_data, columns=columns)
-            print(data)
+            unique_user_ids = data['user_id'].nunique()
 
-            sf_data = tc.SFrame(data)
-            print("Hello")
-            print(sf_data)
+            if not data.empty and unique_user_ids >= 2:
+                sf_data = tc.SFrame(data)
 
-            # Create a model using the implicit collaborative filtering
-            model = tc.item_similarity_recommender.create(sf_data, user_id='user_id', item_id='category_id', similarity_type='cosine')
-            # Generate recommendations
-            recommendations = model.recommend(k=10)
+                # Create a model using the implicit collaborative filtering
+                model = tc.item_similarity_recommender.create(sf_data, user_id='user_id', item_id='category_id', similarity_type='cosine')
+                # Generate recommendations
+                recommendations = model.recommend(k=10)
 
-            # Convert the recommendations to a DataFrame
-            df_recommendations = recommendations.to_dataframe()
-            print("Reccomendatins:")
-            print(df_recommendations)
+                # Convert the recommendations to a DataFrame
+                df_recommendations = recommendations.to_dataframe()
 
+                with open_db() as cur:
+                    cur.execute(f"""SELECT person_id
+                                    FROM credentials
+                                    WHERE username='{session["username"]}'""")
 
-            # # Create a dictionary to hold the recommendations for each user
-            # recommendations = {}
+                    user_id = (cur.fetchone())["person_id"]
+                    current_user_reccomendations = df_recommendations[df_recommendations['user_id'] == user_id]
 
-            # # Iterate over each user and retrieve their top 10 product categories
-            # for user_id in set([row[0] for row in grouped_data]):
-            #     user_scores = [row for row in grouped_data if row[0] == user_id]
-            #     user_scores.sort(key=lambda x: x[2], reverse=True)  # Sort by interaction score
-            #     top_categories = [row[1] for row in user_scores[:10]]
-            #     recommendations[user_id] = top_categories
+                reccomended_categories =[]
+                for i in current_user_reccomendations.to_dict('records'):
+                    reccomended_categories.append(i['category_id'])
+                    print(i)
 
-            # columns = [desc[0] for desc in cur.description]
+                print(reccomended_categories)
+                reccomended_categories=tuple(reccomended_categories)
+                with open_db() as cur:
+                    cur.execute(f"""SELECT *
+                                    FROM products
+                                    WHERE category_id IN {reccomended_categories}""")
+                    products = cur.fetchall()
+                    reccomendations_present=True
 
-            # data = pd.DataFrame(data, columns=columns)
-            # data = tc.SFrame(data)
-            # user_ids = data['person_id'].astype("category")
-            # item_ids = data['category_id'].astype("category")
-            # user_item_data = coo_matrix((np.ones(len(data)), (user_ids.cat.codes, item_ids.cat.codes)))
+            else:
+                reccomendations_present=False
 
-            # model = AlternatingLeastSquares(factors=50, regularization=0.01, iterations=20)
-            # model.fit(user_item_data.T)
-
-            # user_id = 2
-            # user_idx = np.where(user_ids.cat.categories == user_id)[0][0]
-            # scores = model.recommend(user_idx, user_item_data.tocsr(), N=10)
-            # # print(scores)
-
-            # # recommendations = []
-            # # for item_idx, score in scores:
-            # #     item_id = item_ids.cat.categories[item_idx]
-            # #     recommendations.append((item_id, score))
-
-            # # for item_id, score in recommendations:
-            # #     print(f"Item ID: {item_id}, Score: {score}")
-        return render_template("home.html")
+        return render_template("reccomendation.html", reccomendations_present=reccomendations_present, products=products)
     return render_template("invalidUser.html", title="Invalid User")
 
 
@@ -343,8 +322,8 @@ def buy():
             stock = (cur.fetchone())["available_stock"]
 
             cur.execute(f"""SELECT *
-                FROM credentials
-                WHERE username='{session["username"]}'""")
+                            FROM credentials
+                            WHERE username='{session["username"]}'""")
             user = cur.fetchone()
 
             if stock >= int(request.form["quantity"]):
