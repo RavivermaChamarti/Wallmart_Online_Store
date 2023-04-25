@@ -175,9 +175,10 @@ def reccomendations():
                 print(reccomended_categories)
                 reccomended_categories=tuple(reccomended_categories)
                 with open_db() as cur:
-                    cur.execute(f"""SELECT *
-                                    FROM products
-                                    WHERE category_id IN {reccomended_categories}""")
+                    cur.execute(f"""SELECT url, title, sku, brand, price, currency, price, description, primary_category, sub_category_1, sub_category_2
+                                    FROM products, categories
+                                    WHERE products.category_id IN {reccomended_categories}
+                                            AND products.category_id=categories.category_id;""")
                     products = cur.fetchall()
                     reccomendations_present=True
 
