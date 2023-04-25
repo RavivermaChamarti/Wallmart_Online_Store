@@ -150,14 +150,18 @@ def reccomendations():
 
             if not data.empty and unique_user_ids >= 2:
                 sf_data = tc.SFrame(data)
-
                 # Create a model using the implicit collaborative filtering
                 model = tc.item_similarity_recommender.create(sf_data, user_id='user_id', item_id='category_id', similarity_type='cosine')
                 # Generate recommendations
-                recommendations = model.recommend(k=10)
+                category_recommendations = model.recommend(k=10)
+
+                model = tc.item_similarity_recommender.create(sf_data, user_id='user_id', item_id='product_id', similarity_type='cosine')
+                # Generate recommendations
+                product_recommendations = model.recommend(k=10)
 
                 # Convert the recommendations to a DataFrame
-                df_recommendations = recommendations.to_dataframe()
+                df_category_recommendations = category_recommendations.to_dataframe()
+                df_product_recommendation = product_recommendations.to_dataframe()
 
                 with open_db() as cur:
                     cur.execute(f"""SELECT person_id
@@ -165,20 +169,26 @@ def reccomendations():
                                     WHERE username='{session["username"]}'""")
 
                     user_id = (cur.fetchone())["person_id"]
-                    current_user_reccomendations = df_recommendations[df_recommendations['user_id'] == user_id]
+                    current_user_category_reccomendations = df_category_recommendations[df_category_recommendations['user_id'] == user_id]
+                    current_user_product_reccomendations = df_product_recommendation[df_product_recommendation['user_id'] == user_id]
 
                 reccomended_categories =[]
-                for i in current_user_reccomendations.to_dict('records'):
+                for i in current_user_category_reccomendations.to_dict('records'):
                     reccomended_categories.append(i['category_id'])
-                    print(i)
 
-                print(reccomended_categories)
+                reccomended_products =[]
+                for i in current_user_product_reccomendations.to_dict('records'):
+                    reccomended_products.append(i['product_id'])
+
+                reccomended_products=tuple(reccomended_products)
                 reccomended_categories=tuple(reccomended_categories)
                 with open_db() as cur:
                     cur.execute(f"""SELECT url, title, sku, brand, price, currency, price, description, primary_category, sub_category_1, sub_category_2
                                     FROM products, categories
-                                    WHERE products.category_id IN {reccomended_categories}
-                                            AND products.category_id=categories.category_id;""")
+                                    WHERE (products.category_id IN {reccomended_categories}
+                                            OR products.sku IN {reccomended_products})
+                                            AND products.category_id=categories.category_id
+                                    ORDER BY products.sku ASC;""")
                     products = cur.fetchall()
                     reccomendations_present=True
 
