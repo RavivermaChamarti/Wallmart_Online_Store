@@ -72,9 +72,7 @@ def store():
                     WHERE products.category_id = categories.category_id
                     ORDER BY sku DESC"""
             )
-            # LIMIT 10
             products = cur.fetchall()
-            # products= cur.fetchmany(10)
 
         with open_db(dictCur=False) as cur:
             cur.execute(
@@ -183,19 +181,45 @@ def reccomendations():
                 reccomended_products=tuple(reccomended_products)
                 reccomended_categories=tuple(reccomended_categories)
                 with open_db() as cur:
-                    cur.execute(f"""SELECT url, title, sku, brand, price, currency, price, description, primary_category, sub_category_1, sub_category_2
-                                    FROM products, categories
-                                    WHERE (products.category_id IN {reccomended_categories}
-                                            OR products.sku IN {reccomended_products})
-                                            AND products.category_id=categories.category_id
-                                    ORDER BY products.sku ASC;""")
-                    products = cur.fetchall()
-                    reccomendations_present=True
+                    if (len(reccomended_categories) !=0 ) and (len(reccomended_products) !=0 ):
+                        cur.execute(f"""SELECT url, title, sku, brand, price, currency, price, description, primary_category, sub_category_1, sub_category_2
+                                        FROM products, categories
+                                        WHERE (products.category_id IN {reccomended_categories}
+                                                OR products.sku IN {reccomended_products})
+                                                AND products.category_id=categories.category_id
+                                        ORDER BY products.sku ASC;""")
+                        products = cur.fetchall()
+                        reccomendations_present=True
 
+                        with open_db(dictCur=False) as cur:
+                            user = session["username"]
+                            cur.execute(
+                                f"""SELECT SKU
+                                        FROM bookmarkedBy, credentials
+                                        WHERE bookmarkedBy.person_id = credentials.person_id
+                                                AND credentials.username = '{user}'"""
+                            )
+                            bookmarked_products_tuples = cur.fetchall()
+                            bookmarked_products = list(itertools.chain(*bookmarked_products_tuples))
+
+                            cur.execute(
+                                f"""SELECT SKU
+                                        FROM notifyAvailability, credentials
+                                        WHERE notifyAvailability.person_id = credentials.person_id
+                                                AND credentials.username = '{user}'"""
+                            )
+                            notify_availability_products_tuples = cur.fetchall()
+                            notify_availability_products = list(itertools.chain(*notify_availability_products_tuples))
+
+
+
+                        return render_template("reccomendation.html", reccomendations_present=reccomendations_present, products=products,bookmarked_products=bookmarked_products,notify_availability_products=notify_availability_products)
+                    else:
+                        reccomendations_present=False
+                        return render_template("reccomendation.html", reccomendations_present=reccomendations_present)
             else:
                 reccomendations_present=False
-
-        return render_template("reccomendation.html", reccomendations_present=reccomendations_present, products=products)
+                return render_template("reccomendation.html", reccomendations_present=reccomendations_present)
     return render_template("invalidUser.html", title="Invalid User")
 
 
@@ -313,7 +337,7 @@ def register():
                 f"Account Created for {form.first_name.data} {form.last_name.data}!",
                 "success",
             )
-            return redirect(url_for("store"))
+            return redirect(url_for("login"))
     return render_template("register.html", title="Register", form=form)
 
 
