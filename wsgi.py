@@ -1,4 +1,4 @@
-from Wallmart_Online_Store.Wallmart_Online_Store import app
+from Wallmart_Online_Store import app
 
 if __name__ == "__main__":
     app.run()
